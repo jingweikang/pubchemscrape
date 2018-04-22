@@ -5,7 +5,11 @@
 from bs4 import BeautifulSoup
 from requests import get
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException
 import csv
 
 ##### 1. Methods for scraping CAS number and finding URL #####
@@ -77,12 +81,18 @@ def get_wiki_URL(chemical):
 def get_uses(url):
     try:
         driver.get(url)
-        uses = driver.find_element_by_id('Uses')
-        uses = uses.text
-        print('    Found uses.')
-    except NoSuchElementException as e:
-        print('    Could not find uses.')
+
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "Uses")))
+        try:
+            uses = driver.find_element_by_id('Uses')
+            uses = uses.text
+            print('    Found uses.')
+        except NoSuchElementException as e:
+            print('    Could not find uses.')
+            uses = ''
+    except TimeoutException as te:
         uses = ''
+        print('    Failed to establish connection')
     return uses
 
 # Cleans the string retrieved from PubChem
@@ -163,12 +173,14 @@ def write_uses(input_file, output_file):
                 url = row[2]
                 print('Finding uses for: ' + chemical)
                 if url:
-                    for i in range(5):
-                        print('  Try: ' + str(i + 1) + ', wait one second')
-                        uses = get_uses(url)
-                        driver.implicitly_wait(1)
-                        if uses:
-                            break
+                    uses = get_uses(url)
+                    # Wasn't working on first try so loop
+                    # for i in range(5):
+                    #     print('  Try: ' + str(i + 1) + ', wait one second')
+                    #     uses = get_uses(url)
+                    #     driver.implicitly_wait(1)
+                    #     if uses:
+                    #         break
                     cleaned_uses = clean_uses(uses)
                     newline = [chemical, CAS, url, cleaned_uses]
                     csv_writer.writerow(newline)
@@ -228,7 +240,7 @@ driver = webdriver.PhantomJS()
 write_uses('sample_output1.csv', 'sample_output2.csv')
 
 # Reformat entries with uses.
-make_rows_for_uses('sample_output2.csv', 'sample_output3.csv')
+# make_rows_for_uses('sample_output2.csv', 'sample_output3.csv')
 
 # Close driver
 driver.quit()
