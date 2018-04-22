@@ -234,13 +234,13 @@ def split_uses(uses):
 driver = webdriver.PhantomJS()
 
 # Start from raw chemical names.
-# write_excel('sample_chemicals1.csv', 'sample_output1.csv')
+write_excel('sample_chemicals1.csv', 'sample_output1.csv')
 
 # Utilize urls to find uses
 write_uses('sample_output1.csv', 'sample_output2.csv')
 
 # Reformat entries with uses.
-# make_rows_for_uses('sample_output2.csv', 'sample_output3.csv')
+make_rows_for_uses('sample_output2.csv', 'sample_output3.csv')
 
 # Close driver
 driver.quit()
